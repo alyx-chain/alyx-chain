@@ -38,7 +38,7 @@ var (
 
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID:                       big.NewInt(1),
+		ChainID:                       big.NewInt(1413),
 		HomesteadBlock:                big.NewInt(1_150_000),
 		DAOForkBlock:                  big.NewInt(1_920_000),
 		DAOForkSupport:                true,
@@ -58,6 +58,11 @@ var (
 		TerminalTotalDifficultyPassed: true,
 		ShanghaiTime:                  newUint64(1681338455),
 		Ethash:                        new(EthashConfig),
+
+		Congress: &CongressConfig{
+			Period: 3,
+			Epoch:  200,
+		},
 	}
 	// HoleskyChainConfig contains the chain parameters to run a node on the Holesky test network.
 	HoleskyChainConfig = &ChainConfig{
@@ -214,10 +219,39 @@ var (
 		Clique:                        &CliqueConfig{Period: 0, Epoch: 30000},
 	}
 
+	AllCongressProtocolChanges = &ChainConfig{
+		ChainID:                       big.NewInt(1337),
+		HomesteadBlock:                big.NewInt(0),
+		DAOForkBlock:                  nil,
+		DAOForkSupport:                false,
+		EIP150Block:                   big.NewInt(0),
+		EIP155Block:                   big.NewInt(0),
+		EIP158Block:                   big.NewInt(0),
+		ByzantiumBlock:                big.NewInt(0),
+		ConstantinopleBlock:           big.NewInt(0),
+		PetersburgBlock:               big.NewInt(0),
+		IstanbulBlock:                 big.NewInt(0),
+		MuirGlacierBlock:              big.NewInt(0),
+		BerlinBlock:                   big.NewInt(0),
+		LondonBlock:                   big.NewInt(0),
+		ArrowGlacierBlock:             nil,
+		GrayGlacierBlock:              nil,
+		MergeNetsplitBlock:            nil,
+		ShanghaiTime:                  nil,
+		CancunTime:                    nil,
+		PragueTime:                    nil,
+		VerkleTime:                    nil,
+		TerminalTotalDifficulty:       nil,
+		TerminalTotalDifficultyPassed: false,
+		Ethash:                        nil,
+		Clique:                        nil,
+		Congress:                      &CongressConfig{Period: 0, Epoch: 30000},
+	}
+
 	// TestChainConfig contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers for testing proposes.
 	TestChainConfig = &ChainConfig{
-		ChainID:                       big.NewInt(1),
+		ChainID:                       big.NewInt(1419),
 		HomesteadBlock:                big.NewInt(0),
 		DAOForkBlock:                  nil,
 		DAOForkSupport:                false,
@@ -242,6 +276,10 @@ var (
 		TerminalTotalDifficultyPassed: false,
 		Ethash:                        new(EthashConfig),
 		Clique:                        nil,
+		Congress: &CongressConfig{
+			Period: 3,
+			Epoch:  200,
+		},
 	}
 
 	// NonActivatedConfig defines the chain configuration without activating
@@ -298,9 +336,10 @@ type ChainConfig struct {
 	DAOForkSupport bool     `json:"daoForkSupport,omitempty"` // Whether the nodes supports or opposes the DAO hard-fork
 
 	// EIP150 implements the Gas price changes (https://github.com/ethereum/EIPs/issues/150)
-	EIP150Block *big.Int `json:"eip150Block,omitempty"` // EIP150 HF block (nil = no fork)
-	EIP155Block *big.Int `json:"eip155Block,omitempty"` // EIP155 HF block
-	EIP158Block *big.Int `json:"eip158Block,omitempty"` // EIP158 HF block
+	EIP150Block *big.Int    `json:"eip150Block,omitempty"` // EIP150 HF block (nil = no fork)
+	EIP155Block *big.Int    `json:"eip155Block,omitempty"` // EIP155 HF block
+	EIP158Block *big.Int    `json:"eip158Block,omitempty"` // EIP158 HF block
+	EIP150Hash  common.Hash `json:"eip150Hash,omitempty"`  // EIP150 HF hash (needed for header only clients as only gas pricing changed)
 
 	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty"`      // Byzantium switch block (nil = no fork, 0 = already on byzantium)
 	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
@@ -330,9 +369,10 @@ type ChainConfig struct {
 	TerminalTotalDifficultyPassed bool `json:"terminalTotalDifficultyPassed,omitempty"`
 
 	// Various consensus engines
-	Ethash    *EthashConfig `json:"ethash,omitempty"`
-	Clique    *CliqueConfig `json:"clique,omitempty"`
-	IsDevMode bool          `json:"isDev,omitempty"`
+	Ethash    *EthashConfig   `json:"ethash,omitempty"`
+	Clique    *CliqueConfig   `json:"clique,omitempty"`
+	Congress  *CongressConfig `json:"congress,omitempty"`
+	IsDevMode bool            `json:"isDev,omitempty"`
 }
 
 // EthashConfig is the consensus engine configs for proof-of-work based sealing.
@@ -352,6 +392,17 @@ type CliqueConfig struct {
 // String implements the stringer interface, returning the consensus engine details.
 func (c *CliqueConfig) String() string {
 	return "clique"
+}
+
+// CongressConfig is the consensus engine configs for proof-of-stake-authority based sealing.
+type CongressConfig struct {
+	Period uint64 `json:"period"` // Number of seconds between blocks to enforce
+	Epoch  uint64 `json:"epoch"`  // Epoch length to reset votes and checkpoint
+}
+
+// String implements the stringer interface, returning the consensus engine details.
+func (c *CongressConfig) String() string {
+	return "congress"
 }
 
 // Description returns a human-readable description of ChainConfig.
@@ -376,6 +427,14 @@ func (c *ChainConfig) Description() string {
 	case c.Clique != nil:
 		if c.TerminalTotalDifficulty == nil {
 			banner += "Consensus: Clique (proof-of-authority)\n"
+		} else if !c.TerminalTotalDifficultyPassed {
+			banner += "Consensus: Beacon (proof-of-stake), merging from Clique (proof-of-authority)\n"
+		} else {
+			banner += "Consensus: Beacon (proof-of-stake), merged from Clique (proof-of-authority)\n"
+		}
+	case c.Congress != nil:
+		if c.TerminalTotalDifficulty == nil {
+			banner += "Consensus: Congress (proof-of-stake-authority)\n"
 		} else if !c.TerminalTotalDifficultyPassed {
 			banner += "Consensus: Beacon (proof-of-stake), merging from Clique (proof-of-authority)\n"
 		} else {
