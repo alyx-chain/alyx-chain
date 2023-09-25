@@ -278,8 +278,8 @@ var (
 		Ethash:                        new(EthashConfig),
 		Clique:                        nil,
 		Congress: &CongressConfig{
-			Period: 3,
-			Epoch:  200,
+			Period: 2,
+			Epoch:  30,
 		},
 	}
 
