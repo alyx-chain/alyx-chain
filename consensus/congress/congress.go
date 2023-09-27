@@ -675,7 +675,7 @@ func (c *Congress) trySendBlockReward(chain consensus.ChainHeaderReader, header 
 	if _, err := executeMsg(msg, state, header, newChainContext(chain, c), c.chainConfig); err != nil {
 		return err
 	}
-	log.Info("AfterExecuteMsg", "coinbase", header.Coinbase, "balance", state.GetBalance(header.Coinbase))
+	// log.Info("AfterExecuteMsg", "coinbase", header.Coinbase, "balance", state.GetBalance(header.Coinbase))
 	return nil
 }
 
