@@ -563,7 +563,9 @@ func (c *Congress) Finalize(chain consensus.ChainHeaderReader, header *types.Hea
 		}
 	}
 
+	// log.Info("Finalize", "header.Difficulty", header.Difficulty.String(), "diffInTurn", diffInTurn)
 	if header.Difficulty.Cmp(diffInTurn) != 0 {
+		// log.Info("Finalize", "", "header.Difficulty.Cmp(diffInTurn) != 0 encountered")
 		if err := c.tryPunishValidator(chain, header, state); err != nil {
 			return err
 		}
@@ -688,6 +690,7 @@ func (c *Congress) tryPunishValidator(chain consensus.ChainHeaderReader, header 
 	validators := snap.validators()
 	outTurnValidator := validators[number%uint64(len(validators))]
 	// check sigend recently or not
+	// log.Info("tryPunishValidator", "number", number-1, "snap.Recents", snap.Recents)
 	signedRecently := false
 	for _, recent := range snap.Recents {
 		if recent == outTurnValidator {
@@ -695,6 +698,7 @@ func (c *Congress) tryPunishValidator(chain consensus.ChainHeaderReader, header 
 			break
 		}
 	}
+	// log.Info("tryPunishValidator", "number", number, "validators", fmt.Sprintf("%v", validators), "outTurnValidator", outTurnValidator, "signedRecently", signedRecently)
 	if !signedRecently {
 		if err := c.punishValidator(outTurnValidator, chain, header, state); err != nil {
 			return err
@@ -709,6 +713,8 @@ func (c *Congress) doSomethingAtEpoch(chain consensus.ChainHeaderReader, header 
 	if err != nil {
 		return []common.Address{}, err
 	}
+
+	// log.Info("doSomethingAtEpoch", "newSortedValidators", fmt.Sprintf("%v", newSortedValidators))
 
 	// update contract new validators if new set exists
 	if err := c.updateValidators(newSortedValidators, chain, header, state); err != nil {
@@ -841,6 +847,12 @@ func (c *Congress) punishValidator(val common.Address, chain consensus.ChainHead
 		log.Error("Can't punish validator", "err", err)
 		return err
 	}
+	// if ret, err := executeMsg(msg, state, header, newChainContext(chain, c), c.chainConfig); err != nil {
+	// 	log.Error("Can't punish validator", "err", err)
+	// 	return err
+	// } else {
+	// 	log.Info("punishValidator", "validator", val, "ret", string(ret))
+	// }
 
 	return nil
 }
