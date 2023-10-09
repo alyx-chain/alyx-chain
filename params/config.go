@@ -26,7 +26,7 @@ import (
 // Genesis hashes to enforce below configs on.
 var (
 	MainnetGenesisHash = common.HexToHash("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3")
-	TestnetGenesisHash = common.HexToHash("0xf7686ff2cb6aac3b13adb3cd51e764bb87311a7ca4ec931b51fef7d6fab4a93f")
+	TestnetGenesisHash = common.HexToHash("0xd7ffd9c6ae516d06740d0115f0f9582add552789eb34cd5b79fc33687f313b57")
 	HoleskyGenesisHash = common.HexToHash("0xff9006519a8ce843ac9c28549d24211420b546e12ce2d170c77a8cca7964f23d")
 	SepoliaGenesisHash = common.HexToHash("0x25a5cc106eea7138acab33231d7160d69cb777ee0c2c553fcddf5138993e6dd9")
 	GoerliGenesisHash  = common.HexToHash("0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")
@@ -40,24 +40,25 @@ var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID:                       big.NewInt(1413),
-		HomesteadBlock:                big.NewInt(1_150_000),
-		DAOForkBlock:                  big.NewInt(1_920_000),
+		HomesteadBlock:                big.NewInt(0),
+		DAOForkBlock:                  big.NewInt(0),
 		DAOForkSupport:                true,
-		EIP150Block:                   big.NewInt(2_463_000),
-		EIP155Block:                   big.NewInt(2_675_000),
-		EIP158Block:                   big.NewInt(2_675_000),
-		ByzantiumBlock:                big.NewInt(4_370_000),
-		ConstantinopleBlock:           big.NewInt(7_280_000),
-		PetersburgBlock:               big.NewInt(7_280_000),
-		IstanbulBlock:                 big.NewInt(9_069_000),
-		MuirGlacierBlock:              big.NewInt(9_200_000),
-		BerlinBlock:                   big.NewInt(12_244_000),
-		LondonBlock:                   big.NewInt(12_965_000),
-		ArrowGlacierBlock:             big.NewInt(13_773_000),
-		GrayGlacierBlock:              big.NewInt(15_050_000),
-		TerminalTotalDifficulty:       MainnetTerminalTotalDifficulty, // 58_750_000_000_000_000_000_000
+		EIP150Block:                   big.NewInt(0),
+		EIP155Block:                   big.NewInt(0),
+		EIP158Block:                   big.NewInt(0),
+		ByzantiumBlock:                big.NewInt(0),
+		ConstantinopleBlock:           big.NewInt(0),
+		PetersburgBlock:               big.NewInt(0),
+		IstanbulBlock:                 big.NewInt(0),
+		MuirGlacierBlock:              big.NewInt(0),
+		BerlinBlock:                   big.NewInt(0),
+		LondonBlock:                   big.NewInt(0),
+		ArrowGlacierBlock:             big.NewInt(0),
+		GrayGlacierBlock:              big.NewInt(0),
+		TerminalTotalDifficulty:       big.NewInt(0), //
 		TerminalTotalDifficultyPassed: true,
-		ShanghaiTime:                  newUint64(1681338455),
+		ShanghaiTime:                  newUint64(5681338455), // disable shanghai
+		CancunTime:                    newUint64(5000000000), // disable cancun
 		Ethash:                        new(EthashConfig),
 
 		Congress: &CongressConfig{
